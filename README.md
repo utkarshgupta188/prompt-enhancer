@@ -46,6 +46,12 @@ prompt-enhancer/
 
 ---
 
+## 📥 Download
+
+Don't want to build it yourself? **[Download the latest .exe here](https://github.com/utkarshgupta188/prompt-enhancer/releases/latest)**.
+
+---
+
 ## 🚀 Quick Start
 
 ### 1. Prerequisites

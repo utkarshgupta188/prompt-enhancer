@@ -5,7 +5,7 @@ import os
 
 # ── App metadata ──────────────────────────────────────────────────────────────
 APP_NAME    = "PromptEnhancer"
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.0"
 
 # ── Hotkey ────────────────────────────────────────────────────────────────────
 HOTKEY_COMBINATION = "ctrl+shift+e"

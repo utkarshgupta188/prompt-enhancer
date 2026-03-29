@@ -2,6 +2,8 @@ name: Build Executable
 
 on:
   push:
+    tags:
+      - 'v*'
     branches:
       - main
       - master
@@ -14,6 +16,8 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
@@ -38,3 +42,9 @@ jobs:
         with:
           name: PromptEnhancer-Windows
           path: dist/PromptEnhancer.exe
+
+      - name: Release Executable
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: dist/PromptEnhancer.exe
