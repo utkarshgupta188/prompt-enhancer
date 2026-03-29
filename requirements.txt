@@ -1,0 +1,5 @@
+PyQt5>=5.15
+pynput>=1.7
+pyperclip>=1.8
+openai>=1.0
+keyboard>=0.13
