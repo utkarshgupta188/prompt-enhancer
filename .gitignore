@@ -1,2 +1,13 @@
 __pycache__/
+*.py[cod]
+*$py.class
 .agent
+build/
+dist/
+*.spec
+.env
+venv/
+.venv/
+env/
+.idea/
+.vscode/

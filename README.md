@@ -30,13 +30,16 @@ A global AI-powered prompt enhancer for Windows. Select text in **any** applicat
 
 ```
 prompt-enhancer/
-├── main.py              # Entry point — wires everything together
-├── ui.py                # PyQt5 popup window (dark theme)
-├── enhancer.py          # OpenAI API communication
-├── clipboard_handler.py # Clipboard capture & paste simulation
-├── tray.py              # System tray icon & menu
-├── startup.py           # Windows auto-start management
-├── config.py            # All settings & mode prompts
+├── src/
+│   ├── main.py              # Entry point — wires everything together
+│   ├── ui.py                # PyQt5 popup window (dark theme)
+│   ├── enhancer.py          # OpenAI API communication
+│   ├── clipboard_handler.py # Clipboard capture & paste simulation
+│   ├── tray.py              # System tray icon & menu
+│   ├── startup.py           # Windows auto-start management
+│   ├── config.py            # All settings & mode prompts
+│   ├── settings.py          # Settings persistence
+│   └── settings_dialog.py   # Settings UI
 ├── requirements.txt     # Python dependencies
 └── README.md            # This file
 ```
@@ -75,10 +78,10 @@ $env:OPENAI_API_KEY = "sk-your-api-key-here"
 
 ```bash
 # With console (for debugging)
-python main.py
+python src/main.py
 
 # Without console (silent background mode)
-pythonw main.py
+pythonw src/main.py
 ```
 
 ### 5. Use It!
@@ -103,14 +106,14 @@ pip install pyinstaller
 ### Build
 
 ```bash
-pyinstaller --onefile --noconsole --name PromptEnhancer main.py
+pyinstaller --onefile --noconsole --name PromptEnhancer src/main.py
 ```
 
 ### With Custom Icon
 
 ```bash
 # Place your icon.ico file in the project folder, then:
-pyinstaller --onefile --noconsole --name PromptEnhancer --icon=icon.ico main.py
+pyinstaller --onefile --noconsole --name PromptEnhancer --icon=icon.ico src/main.py
 ```
 
 The `.exe` will be in the `dist/` folder.
