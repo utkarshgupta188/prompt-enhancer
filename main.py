@@ -1,99 +1,62 @@
 """
 Prompt Enhancer — Main Entry Point
-===================================
-A global AI-powered prompt enhancer for Windows.
-
-Hotkey: Ctrl+Shift+E — Captures selected text, enhances it, replaces it.
-
-Usage:
-    python main.py          (with console)
-    pythonw main.py         (no console)
+Run without a CMD window: double-click run.pyw
 """
-
 import sys
-
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QObject, pyqtSignal
-
-import keyboard  # global hotkey listener
+import keyboard
 
 from ui import EnhancerPopup
 from tray import SystemTray
+from settings_dialog import SettingsDialog
 from clipboard_handler import capture_selected_text
 from config import HOTKEY_COMBINATION, APP_NAME
 
 
-class _HotkeyBridge(QObject):
-    """
-    Thread-safe signal bridge between the keyboard listener thread
-    and the Qt main thread.
-
-    Qt automatically uses a queued connection when a signal is emitted
-    from a non-Qt thread to a slot running in the main thread, which
-    makes this safe without any manual locking.
-    """
+class _Bridge(QObject):
+    """Thread-safe bridge: keyboard thread → Qt main thread."""
     triggered = pyqtSignal()
 
 
 class PromptEnhancerApp:
-    """
-    Main application controller.
-    Wires together the UI popup, system tray, and global hotkey.
-    """
-
     def __init__(self):
         self.app = QApplication(sys.argv)
         self.app.setApplicationName(APP_NAME)
-        self.app.setQuitOnLastWindowClosed(False)  # Keep running in tray
+        self.app.setQuitOnLastWindowClosed(False)
 
-        # ── Thread-safe bridge for hotkey → main thread ──
-        self._hotkey_bridge = _HotkeyBridge()
-        self._hotkey_bridge.triggered.connect(self._on_hotkey_triggered)
+        self._bridge = _Bridge()
+        self._bridge.triggered.connect(self._on_hotkey)
 
-        # ── Components ──
-        self.popup = EnhancerPopup()
-        self.tray = SystemTray(self.app)
+        self.popup   = EnhancerPopup()
+        self.tray    = SystemTray(self.app)
+        self.settings_dlg = SettingsDialog()
 
-        # ── Signal Wiring ──
-        self.tray.signals.show_popup.connect(self._show_popup_empty)
+        # wire signals
+        self.tray.signals.show_popup.connect(lambda: self.popup.show_popup(""))
+        self.tray.signals.show_settings.connect(self._show_settings)
         self.tray.signals.quit_app.connect(self._quit)
+        self.popup.open_settings.connect(self._show_settings)
+        self.settings_dlg.saved.connect(self.popup.refresh_badge)
 
-        # ── Global Hotkey ──
-        self._setup_hotkey()
+        keyboard.add_hotkey(HOTKEY_COMBINATION, self._bridge.triggered.emit, suppress=True)
 
-    def _setup_hotkey(self):
-        """
-        Registers the global hotkey using the `keyboard` library.
-        The listener runs in a daemon thread; we emit a Qt signal to
-        safely cross back to the main thread.
-        """
-        bridge = self._hotkey_bridge
-
-        def hotkey_handler():
-            bridge.triggered.emit()
-
-        keyboard.add_hotkey(HOTKEY_COMBINATION, hotkey_handler, suppress=True)
-
-    def _on_hotkey_triggered(self):
-        """Called on the Qt main thread when the global hotkey fires."""
+    def _on_hotkey(self):
         selected = capture_selected_text()
         self.popup.show_popup(initial_text=selected)
 
-    def _show_popup_empty(self):
-        """Opens the popup without pre-filled text (triggered from tray)."""
-        self.popup.show_popup(initial_text="")
+    def _show_settings(self):
+        self.settings_dlg.show_centered()
 
     def _quit(self):
-        """Cleanly shuts down the application."""
         keyboard.unhook_all()
         self.app.quit()
 
     def run(self) -> int:
-        """Starts the application event loop."""
         self.tray.show()
         self.tray.show_message(
             "Prompt Enhancer",
-            "Running in background. Press Ctrl+Shift+E to enhance text."
+            "Running. Press Ctrl+Shift+E to enhance text."
         )
         return self.app.exec_()
 

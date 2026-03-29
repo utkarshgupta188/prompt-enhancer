@@ -1,125 +1,61 @@
 """
-AI Enhancement module.
-Supports both OpenRouter (default, auto model) and OpenAI.
-
-Provider resolution order:
-  1. PROVIDER env var  →  "openrouter" | "openai"
-  2. Falls back to OpenRouter if unset.
-
-OpenRouter auto model (openrouter/auto) routes each request to the
-best available model automatically, based on prompt size and content.
+AI Enhancement — reads provider/key/model from settings.py (no env vars needed).
 """
-
 from openai import OpenAI
-from config import (
-    PROVIDER,
-    # OpenRouter
-    OPENROUTER_API_KEY, OPENROUTER_BASE_URL,
-    OPENROUTER_MODEL, OPENROUTER_SITE_URL, OPENROUTER_SITE_NAME,
-    # OpenAI
-    OPENAI_API_KEY, OPENAI_MODEL,
-    # Modes
-    MODES,
-)
+import settings as S
+from config import MODES, OPENROUTER_BASE_URL, OPENROUTER_SITE_NAME
 
 
 def _make_client() -> tuple[OpenAI, str]:
-    """
-    Builds the correct OpenAI-compatible client and model name
-    based on the configured PROVIDER.
+    cfg = S.load()
+    prov = cfg.get("provider", "openrouter")
 
-    Returns:
-        (client, model_name) tuple ready for chat completions.
-
-    Raises:
-        ValueError: If the required API key is missing.
-    """
-    if PROVIDER == "openrouter":
-        if not OPENROUTER_API_KEY:
+    if prov == "openrouter":
+        key = cfg.get("openrouter_api_key", "").strip()
+        if not key:
             raise ValueError(
-                "OpenRouter API key not set.\n\n"
-                "Get a free key at https://openrouter.ai/keys\n"
-                "Then set it:\n"
-                "  set OPENROUTER_API_KEY=sk-or-your-key-here\n\n"
-                "Or switch to OpenAI:\n"
-                "  set PROVIDER=openai\n"
-                "  set OPENAI_API_KEY=sk-your-openai-key"
+                "OpenRouter API key not configured.\n\n"
+                "Click ⚙ Settings to add your key.\n"
+                "Get a free key at openrouter.ai/keys"
             )
-
-        extra_headers = {}
-        if OPENROUTER_SITE_URL:
-            extra_headers["HTTP-Referer"] = OPENROUTER_SITE_URL
-        if OPENROUTER_SITE_NAME:
-            extra_headers["X-Title"] = OPENROUTER_SITE_NAME
-
         client = OpenAI(
-            api_key=OPENROUTER_API_KEY,
+            api_key=key,
             base_url=OPENROUTER_BASE_URL,
-            default_headers=extra_headers or None,
+            default_headers={"X-Title": OPENROUTER_SITE_NAME},
         )
-        return client, OPENROUTER_MODEL
-
-    else:  # openai
-        if not OPENAI_API_KEY:
+        return client, cfg.get("openrouter_model", "openrouter/auto")
+    else:
+        key = cfg.get("openai_api_key", "").strip()
+        if not key:
             raise ValueError(
-                "OpenAI API key not set.\n\n"
-                "Set the environment variable:\n"
-                "  set OPENAI_API_KEY=sk-your-key-here\n\n"
-                "Or use OpenRouter instead:\n"
-                "  set PROVIDER=openrouter\n"
-                "  set OPENROUTER_API_KEY=sk-or-your-key-here"
+                "OpenAI API key not configured.\n\n"
+                "Click ⚙ Settings to add your key."
             )
-
-        client = OpenAI(api_key=OPENAI_API_KEY)
-        return client, OPENAI_MODEL
+        return OpenAI(api_key=key), cfg.get("openai_model", "gpt-4o-mini")
 
 
 def enhance_text(text: str, mode: str) -> str:
-    """
-    Sends text to the configured AI provider for enhancement.
-
-    Args:
-        text: The original text to enhance.
-        mode: The enhancement mode key (must exist in MODES dict).
-
-    Returns:
-        The enhanced text string.
-
-    Raises:
-        ValueError: If API key is not configured or inputs are invalid.
-        Exception:  If the API call fails.
-    """
     if not text or not text.strip():
         raise ValueError("No text provided for enhancement.")
-
-    system_prompt = MODES.get(mode)
-    if not system_prompt:
-        raise ValueError(f"Unknown enhancement mode: {mode}")
-
+    prompt = MODES.get(mode)
+    if not prompt:
+        raise ValueError(f"Unknown mode: {mode}")
     client, model = _make_client()
-
-    response = client.chat.completions.create(
+    resp = client.chat.completions.create(
         model=model,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": text},
-        ],
+        messages=[{"role": "system", "content": prompt}, {"role": "user", "content": text}],
         temperature=0.7,
         max_tokens=2048,
     )
-
-    result = response.choices[0].message.content
+    result = resp.choices[0].message.content
     return result.strip() if result else ""
 
 
-def get_active_provider_label() -> str:
-    """
-    Returns a short human-readable label for the active provider + model.
-    Used by the UI to show which backend is in use.
-    """
-    if PROVIDER == "openrouter":
-        model = OPENROUTER_MODEL
-        label = "auto" if model == "openrouter/auto" else model.split("/")[-1]
-        return f"OpenRouter · {label}"
-    else:
-        return f"OpenAI · {OPENAI_MODEL}"
+def get_provider_label() -> str:
+    cfg = S.load()
+    prov = cfg.get("provider", "openrouter")
+    if prov == "openrouter":
+        m = cfg.get("openrouter_model", "openrouter/auto")
+        tag = "auto" if m == "openrouter/auto" else m.split("/")[-1]
+        return f"OpenRouter · {tag}"
+    return f"OpenAI · {cfg.get('openai_model', 'gpt-4o-mini')}"
