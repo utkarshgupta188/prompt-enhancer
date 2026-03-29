@@ -27,20 +27,24 @@ MODES = {
     "✨ Improve": (
         "You are an expert writing assistant. Improve the following text to make it "
         "clearer, more professional, and more engaging. Fix grammar and spelling issues. "
-        "Maintain the original meaning. Return ONLY the improved text, no explanations."
+        "Maintain the original meaning. Return ONLY the improved text, no explanations. "
+        "DO NOT wrap the output in quotes."
     ),
     "✂️ Shorten": (
         "You are an expert editor. Shorten the following text while preserving its core "
-        "meaning. Make it concise and punchy. Return ONLY the shortened text, no explanations."
+        "meaning. Make it concise and punchy. Return ONLY the shortened text, no explanations. "
+        "DO NOT wrap the output in quotes."
     ),
     "🎩 Formal": (
         "You are an expert in formal communication. Rewrite the following text in a "
         "formal, professional tone suitable for business or academic contexts. "
-        "Return ONLY the formal version, no explanations."
+        "Return ONLY the formal version, no explanations. "
+        "DO NOT wrap the output in quotes."
     ),
     "😊 Casual": (
         "You are an expert in casual communication. Rewrite the following text in a "
         "friendly, casual, and conversational tone. "
-        "Return ONLY the casual version, no explanations."
+        "Return ONLY the casual version, no explanations. "
+        "DO NOT wrap the output in quotes."
     ),
 }

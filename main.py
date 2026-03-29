@@ -3,6 +3,11 @@ Prompt Enhancer — Main Entry Point
 Run without a CMD window: double-click run.pyw
 """
 import sys
+if sys.platform == "win32":
+    import ctypes
+    # Immediately hide the console window if it exists
+    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QObject, pyqtSignal
 import keyboard
@@ -43,7 +48,7 @@ class PromptEnhancerApp:
 
     def _on_hotkey(self):
         selected = capture_selected_text()
-        self.popup.show_popup(initial_text=selected)
+        self.popup.show_popup(text=selected)
 
     def _show_settings(self):
         self.settings_dlg.show_centered()

@@ -33,6 +33,16 @@ def capture_selected_text() -> str:
     # Small delay to ensure focus is on the right window
     time.sleep(0.05)
 
+    # Force release Shift and Ctrl just in case the user is still holding them
+    from pynput.keyboard import Key
+    keyboard_controller.release(Key.shift)
+    keyboard_controller.release(Key.shift_l)
+    keyboard_controller.release(Key.shift_r)
+    keyboard_controller.release('e')
+    keyboard_controller.release('E')
+
+    time.sleep(0.05)
+    
     # Simulate Ctrl+C
     keyboard_controller.press(Key.ctrl)
     keyboard_controller.press('c')

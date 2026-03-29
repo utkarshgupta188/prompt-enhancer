@@ -48,7 +48,12 @@ def enhance_text(text: str, mode: str) -> str:
         max_tokens=2048,
     )
     result = resp.choices[0].message.content
-    return result.strip() if result else ""
+    if result:
+        result = result.strip()
+        if (result.startswith('"') and result.endswith('"')) or (result.startswith("'") and result.endswith("'")):
+            if len(result) >= 2:
+                result = result[1:-1].strip()
+    return result if result else ""
 
 
 def get_provider_label() -> str:
